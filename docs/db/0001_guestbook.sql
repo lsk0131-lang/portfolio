@@ -1,5 +1,7 @@
--- 방명록 (guestbook) 스키마 + RLS 정책
--- Supabase Dashboard → SQL Editor 에 붙여 넣어 실행하세요.
+-- ============================================================================
+-- 0001 — guestbook 테이블 + RLS 정책
+-- 적용: Supabase Dashboard → SQL Editor 또는 psql 로 실행
+-- ============================================================================
 
 create extension if not exists pgcrypto;
 
@@ -23,7 +25,7 @@ create policy "guestbook_select_public"
   to anon, authenticated
   using (true);
 
--- 누구나 글 작성 가능 (수정/삭제는 정책을 만들지 않아 차단됨)
+-- 누구나 글 작성 가능 (수정/삭제는 정책 없음 → 차단)
 drop policy if exists "guestbook_insert_public" on public.guestbook;
 create policy "guestbook_insert_public"
   on public.guestbook

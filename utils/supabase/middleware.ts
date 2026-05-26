@@ -9,7 +9,13 @@ export const updateSession = (request: NextRequest) => {
     request: { headers: request.headers },
   });
 
-  const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
+  // .env.local 미설정/placeholder 상태에서도 사이트는 떠야 하므로
+  // URL 형식이 유효하지 않으면 세션 리프레시를 건너뛴다.
+  if (!supabaseUrl || !supabaseKey || !/^https?:\/\//i.test(supabaseUrl)) {
+    return supabaseResponse;
+  }
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

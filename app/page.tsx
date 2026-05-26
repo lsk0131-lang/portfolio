@@ -1,3 +1,5 @@
+import Career from "./components/Career";
+import Education from "./components/Education";
 import Guestbook from "./components/Guestbook";
 
 export default function Page() {
@@ -43,43 +45,13 @@ export default function Page() {
 
       <section id="career" className="section container reveal">
         <h2 className="section__title">Career</h2>
-        <ol className="career">
-          <li className="career__item">
-            <div className="career__period">2008.10 — 현재</div>
-            <div className="career__body">
-              <h3 className="career__company">카카오</h3>
-              <p className="career__role">기업PR 리더</p>
-            </div>
-          </li>
-          <li className="career__item">
-            <div className="career__period">2006.02 — 2008.03</div>
-            <div className="career__body">
-              <h3 className="career__company">다음커뮤니케이션</h3>
-              <p className="career__role">기업커뮤니케이션팀 매니저</p>
-            </div>
-          </li>
-        </ol>
+        <Career />
       </section>
 
       <section id="education" className="section section--soft reveal">
         <div className="container">
           <h2 className="section__title">Education</h2>
-          <ol className="education">
-            <li className="education__item">
-              <div className="education__period">YYYY.MM — YYYY.MM</div>
-              <div className="education__body">
-                <h3 className="education__school">학교명</h3>
-                <p className="education__degree">전공 · 학위</p>
-              </div>
-            </li>
-            <li className="education__item">
-              <div className="education__period">YYYY.MM — YYYY.MM</div>
-              <div className="education__body">
-                <h3 className="education__school">학교명</h3>
-                <p className="education__degree">전공 · 학위</p>
-              </div>
-            </li>
-          </ol>
+          <Education />
         </div>
       </section>
 

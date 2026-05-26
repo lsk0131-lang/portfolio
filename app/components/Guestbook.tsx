@@ -21,16 +21,22 @@ function formatDate(iso: string) {
 }
 
 export default async function Guestbook() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data, error } = await supabase
-    .from("guestbook")
-    .select("id, name, message, created_at")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const entries = (data ?? []) as Entry[];
+  let entries: Entry[] = [];
+  let error: unknown = null;
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const result = await supabase
+      .from("guestbook")
+      .select("id, name, message, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    entries = (result.data ?? []) as Entry[];
+    error = result.error;
+  } catch (e) {
+    // .env.local 미설정 등으로 createClient 가 throw 하는 경우 graceful 처리
+    error = e;
+  }
 
   return (
     <div className="guestbook">
