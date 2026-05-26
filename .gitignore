@@ -1,0 +1,20 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# 환경변수 (anon/publishable key 라도 키 분리 원칙상 커밋 제외)
+.env*.local
+
+# 구버전 정적 사이트 잔재 (제거 예정)
+config.js
+
+# Claude Code 로컬 권한 설정 (공유용 settings.json 만 커밋)
+.claude/settings.local.json
+
+# OS / 에디터
+.DS_Store
+.vscode/
+.idea/
