@@ -1,6 +1,7 @@
 import Career from "./components/Career";
 import Education from "./components/Education";
 import Guestbook from "./components/Guestbook";
+import SectionHeader from "./components/SectionHeader";
 
 export default function Page() {
   return (
@@ -44,13 +45,13 @@ export default function Page() {
       </section>
 
       <section id="career" className="section container reveal">
-        <h2 className="section__title">Career</h2>
+        <SectionHeader title="Career" addHref="/admin/career/new" addLabel="경력 추가" />
         <Career />
       </section>
 
       <section id="education" className="section section--soft reveal">
         <div className="container">
-          <h2 className="section__title">Education</h2>
+          <SectionHeader title="Education" addHref="/admin/education/new" addLabel="학력 추가" />
           <Education />
         </div>
       </section>

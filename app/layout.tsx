@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SiteHeader from "./components/SiteHeader";
 import ScrollReveal from "./components/ScrollReveal";
+import { getAdminStatus } from "@/utils/admin";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,18 +24,19 @@ const themeInitScript = `(function () {
   } catch (e) {}
 })();`;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isAdmin, email } = await getAdminStatus();
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <SiteHeader />
+        <SiteHeader email={email} isAdmin={isAdmin} />
         <main>{children}</main>
         <footer className="site-footer">
           <div className="container">

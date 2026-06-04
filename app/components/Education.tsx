@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { getAdminStatus } from "@/utils/admin";
+import DeleteEntryButton from "./DeleteEntryButton";
 
 type EducationRow = {
   id: string;
@@ -36,6 +39,8 @@ export default async function Education() {
     error = e;
   }
 
+  const { isAdmin } = await getAdminStatus();
+
   if (error || rows.length === 0) {
     return (
       <p className="guestbook__empty">
@@ -54,6 +59,21 @@ export default async function Education() {
           <div className="education__body">
             <h3 className="education__school">{row.school}</h3>
             <p className="education__degree">{row.degree}</p>
+            {isAdmin && (
+              <div className="entry-controls">
+                <Link
+                  href={`/admin/education/${row.id}/edit`}
+                  className="entry-controls__btn"
+                >
+                  수정
+                </Link>
+                <DeleteEntryButton
+                  entity="education"
+                  id={row.id}
+                  label={`${row.school} · ${row.degree}`}
+                />
+              </div>
+            )}
           </div>
         </li>
       ))}

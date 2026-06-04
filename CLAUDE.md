@@ -15,23 +15,32 @@ PR 직군에 맞게 다음과 같이 구성되어 있습니다:
 ## 저장소 구조
 
 - `app/`
-  - `layout.tsx` — 루트 레이아웃 (`<html>` / `<body>`, 사이트 헤더, 푸터, FOUC 방지 inline 스크립트)
+  - `layout.tsx` — 루트 레이아웃 (`<html>` / `<body>`, 사이트 헤더, 푸터, FOUC 방지 inline 스크립트, admin 상태 SSR fetch)
   - `page.tsx` — 메인 페이지 (Hero / About / Skills / Career / Education / Guestbook / Contact 섹션)
   - `globals.css` — 디자인 토큰 및 모든 컴포넌트 스타일 (CSS 변수 기반)
   - `components/`
-    - `SiteHeader.tsx` — 네비게이션, 햄버거 메뉴, 테마 토글 (client)
+    - `SiteHeader.tsx` — 네비게이션, 햄버거 메뉴, 테마 토글, 로그인/로그아웃 (client, isAdmin/email prop 으로 분기)
+    - `SectionHeader.tsx` — 섹션 타이틀 + 관리자용 "추가" 버튼 (server)
     - `ScrollReveal.tsx` — `.reveal` 요소 IntersectionObserver 페이드인 (client)
-    - `Career.tsx` / `Education.tsx` — 경력/학력 리스트 (server, Supabase 조회)
+    - `Career.tsx` / `Education.tsx` — 경력/학력 리스트 + 관리자용 수정/삭제 버튼 (server)
+    - `DeleteEntryButton.tsx` — career/education 삭제 (client, confirm + server action)
     - `Guestbook.tsx` — 방명록 리스트 (server, Supabase 조회)
     - `GuestbookForm.tsx` — 방명록 작성 폼 (client, Supabase insert)
-- `utils/supabase/` — Supabase 클라이언트 헬퍼
-  - `server.ts` — server component 용 (`cookies()` 사용)
-  - `client.ts` — browser 용
-  - `middleware.ts` — 세션 쿠키 갱신용 (env 미설정 시 안전하게 통과)
+  - `login/` — `/login` (server page + client form)
+  - `auth/callback/route.ts` — 매직 링크 콜백 (`code → session` 교환)
+  - `auth/signout/route.ts` — POST 시 세션 종료
+  - `admin/` — 관리자 보호 영역 (`layout.tsx` 에서 비관리자 차단)
+    - `page.tsx` — 대시보드
+    - `actions.ts` — career/education CRUD 서버 액션 (`createEntry`, `updateEntry`, `deleteEntry`)
+    - `EntityForm.tsx` — 추가/수정 공용 폼 (client, server action 호출)
+    - `career/new/`, `career/[id]/edit/`, `education/new/`, `education/[id]/edit/` — 각 폼 페이지
+- `utils/`
+  - `supabase/server.ts` / `client.ts` / `middleware.ts` — Supabase 클라이언트 헬퍼
+  - `admin.ts` — `getAdminStatus()` (현재 사용자 이메일과 `public.admins` 매칭 여부 판정)
 - `middleware.ts` — Next.js 루트 미들웨어 (세션 리프레시)
 - `docs/db/` — **DB 스키마/마이그레이션 단일 진실 공급원 (Single Source of Truth)**
   - `erd.md` — Mermaid ERD + 테이블 설명
-  - `0001_guestbook.sql`, `0002_career_education.sql` — 적용 순서대로 정렬된 마이그레이션 파일
+  - `0001_guestbook.sql`, `0002_career_education.sql`, `0003_admin_auth.sql` — 적용 순서대로 정렬된 마이그레이션 파일
 - `.env.local.example` — 환경변수 템플릿
 - `package.json`, `tsconfig.json`, `next.config.ts`
 
@@ -53,6 +62,36 @@ PR 직군에 맞게 다음과 같이 구성되어 있습니다:
 6. **컴포넌트 연결**: 새 테이블을 UI 에 노출할 때는 `app/components/` 에 server component 를 만들고 [utils/supabase/server.ts](utils/supabase/server.ts) 의 `createClient` 로 조회합니다. 실패 시 graceful 처리 (Career.tsx / Education.tsx / Guestbook.tsx 패턴 참고).
 
 > 절대 ad-hoc 으로 Supabase Studio 만 사용해서 스키마를 바꾸지 마세요 — `docs/db/` 와 실제 DB 가 불일치하면 다른 환경 (Vercel preview, 다른 머신) 에서 재현 불가합니다.
+
+## 인증 / 관리자 권한
+
+이 사이트는 **Supabase Auth 의 이메일 매직 링크** 로 관리자만 로그인합니다. 일반 방문자는 로그인 없이 모든 콘텐츠를 읽을 수 있고, **관리자만** `/admin` 진입과 career/education 의 추가·수정·삭제가 가능합니다.
+
+**계층 구조**
+
+1. `public.admins` 테이블에 등록된 이메일이 관리자입니다.
+2. Supabase Auth 로 그 이메일로 로그인하면 `public.is_admin()` 이 `true` 가 되어 RLS 정책이 쓰기를 허용합니다.
+3. Next.js 측에서는 [utils/admin.ts](utils/admin.ts) 의 `getAdminStatus()` 가 세션 user → admins 조회 → `{ isAdmin, email }` 을 반환. 이 값이 [app/admin/layout.tsx](app/admin/layout.tsx) 의 보호 게이트와 공개 사이트의 컨트롤 노출 여부를 결정합니다.
+
+**로그인 흐름**
+
+1. `/login` → 이메일 입력 → `supabase.auth.signInWithOtp({ email, emailRedirectTo: <origin>/auth/callback?next=/admin })`
+2. 받은 메일의 매직 링크 클릭 → `/auth/callback?code=...` → `exchangeCodeForSession(code)` → `/admin` 으로 리다이렉트
+3. 관리자가 아닌 이메일로 로그인하면 `/login?error=not-admin` 으로 돌아옴
+4. 로그아웃: 사이트 헤더의 "로그아웃" 또는 `/auth/signout` 으로 POST
+
+**🚨 Supabase Dashboard 설정 (수동, 1회)**
+
+이 흐름이 동작하려면 Supabase Dashboard 의 **Authentication → URL Configuration** 에서 아래 URL 들을 **Redirect URLs** 에 추가해야 합니다.
+
+- 로컬 개발 (현재 포트 8080): `http://localhost:8080/**`
+- 배포 환경 URL: `https://<your-vercel-domain>/**`
+
+추가하지 않으면 매직 링크 클릭 시 Supabase 가 redirect 를 거부합니다.
+
+**관리자 추가/제거**
+
+새 관리자는 `public.admins` 에 한 줄 추가하면 됩니다 (Supabase Studio 또는 새 마이그레이션). 코드 변경 불필요.
 
 ## 환경변수 설정
 
@@ -102,9 +141,11 @@ npm run build && npm run start
 - **Skills (업무 역량)**: `<section id="skills">` 의 `<li className="skill-tag">` 항목 추가/삭제
 - **Contact (연락처)**: `<section id="contact">` 의 `<ul className="contact-list">` 안 `<li>` 수정
 
-**(B) DB 콘텐츠 — Supabase Studio 또는 SQL 로 편집**
+**(B) DB 콘텐츠 — `/admin` UI 또는 Supabase Studio 로 편집**
 - **Career (경력)**: `public.career` 테이블. `started_on` 필수, `ended_on` NULL = 현재.
 - **Education (학력)**: `public.education` 테이블. `started_on` 필수, `ended_on` NULL = 재학중. 일=01 권장.
 - **Guestbook (방명록)**: `public.guestbook`. 사용자가 사이트 폼에서 직접 작성.
 
-DB 콘텐츠 컬럼/제약을 바꾸려면 위 **DB 작업 워크플로우** 를 따라 새 마이그레이션을 추가하세요.
+관리자로 로그인하면 공개 사이트의 Career/Education 섹션에서 직접 "+ 추가" / "수정" / "삭제" 버튼을 사용할 수 있습니다 — `/admin` 대시보드 또는 항목별 인라인 버튼 양쪽 다 가능. 일반 방문자에게는 버튼이 보이지 않습니다.
+
+DB 콘텐츠의 **컬럼/제약/RLS** 를 바꾸려면 위 **DB 작업 워크플로우** 를 따라 새 마이그레이션을 추가하세요.

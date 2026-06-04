@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-export default function SiteHeader() {
+type Props = {
+  email: string | null;
+  isAdmin: boolean;
+};
+
+export default function SiteHeader({ email, isAdmin }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -39,6 +44,22 @@ export default function SiteHeader() {
           <li><a href="#contact" onClick={closeMenu}>Contact</a></li>
         </ul>
         <div className="nav__actions">
+          {isAdmin ? (
+            <>
+              <a href="/admin" className="nav__authlink">관리</a>
+              <form action="/auth/signout" method="post">
+                <button type="submit" className="nav__authlink nav__authlink--button">
+                  로그아웃
+                </button>
+              </form>
+            </>
+          ) : email ? (
+            <span className="nav__authlink nav__authlink--muted" title={email}>
+              {email}
+            </span>
+          ) : (
+            <a href="/login" className="nav__authlink">로그인</a>
+          )}
           <button
             className="nav__action nav__action--theme"
             type="button"

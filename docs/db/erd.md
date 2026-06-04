@@ -32,9 +32,15 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
+
+    admins {
+        text        email        PK  "auth.users.email 와 매칭"
+        text        note
+        timestamptz created_at
+    }
 ```
 
-> 현재 도메인 상 테이블 간 직접 관계 (FK) 는 없습니다. 모두 독립적인 콘텐츠 테이블.
+> 현재 도메인 상 테이블 간 직접 FK 관계는 없습니다. `admins.email` 은 Supabase Auth 의 `auth.users.email` 과 의미적으로 매칭되지만 FK 는 걸지 않습니다 (auth 스키마는 Supabase 내부 관리).
 
 ## 테이블별 설명
 
@@ -57,6 +63,13 @@ erDiagram
 - 정렬: `started_on desc`.
 - RLS: career 와 동일.
 - 마이그레이션: [0002_career_education.sql](0002_career_education.sql)
+
+### `admins`
+- 사이트 관리자 이메일 화이트리스트. 여기 등록된 이메일로 Supabase Auth 매직 링크 로그인하면 사이트의 `/admin` 진입 및 career/education 쓰기 권한이 활성화됩니다.
+- RLS: 로그인한 사용자가 본인 이메일이 등록되어 있는지만 확인 가능 (`auth.jwt() ->> 'email' = email`).
+- `public.is_admin()` security-definer 함수가 본 테이블을 조회하여 career/education 의 INSERT/UPDATE/DELETE 정책 판정에 사용됨.
+- 시드: `lsk0131@gmail.com` (사이트 소유자).
+- 마이그레이션: [0003_admin_auth.sql](0003_admin_auth.sql)
 
 ## 표시 형식 규칙
 

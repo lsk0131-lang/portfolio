@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { getAdminStatus } from "@/utils/admin";
+import DeleteEntryButton from "./DeleteEntryButton";
 
 type CareerRow = {
   id: string;
@@ -16,7 +19,6 @@ function formatPeriod(startedOn: string, endedOn: string | null) {
 }
 
 function formatYearMonth(iso: string) {
-  // iso = 'YYYY-MM-DD'
   const [y, m] = iso.split("-");
   return `${y}.${m}`;
 }
@@ -37,6 +39,8 @@ export default async function Career() {
     error = e;
   }
 
+  const { isAdmin } = await getAdminStatus();
+
   if (error || rows.length === 0) {
     return (
       <p className="guestbook__empty">
@@ -55,6 +59,21 @@ export default async function Career() {
           <div className="career__body">
             <h3 className="career__company">{row.company}</h3>
             <p className="career__role">{row.role}</p>
+            {isAdmin && (
+              <div className="entry-controls">
+                <Link
+                  href={`/admin/career/${row.id}/edit`}
+                  className="entry-controls__btn"
+                >
+                  수정
+                </Link>
+                <DeleteEntryButton
+                  entity="career"
+                  id={row.id}
+                  label={`${row.company} · ${row.role}`}
+                />
+              </div>
+            )}
           </div>
         </li>
       ))}
