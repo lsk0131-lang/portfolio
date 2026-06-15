@@ -16,7 +16,7 @@
   --radius-sm: 8px;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
-  --space-section: 4.5rem;
+  --space-section: 3rem;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -132,13 +132,48 @@ img { max-width: 100%; display: block; }
 
 /* ───── Hero ───── */
 .hero {
-  min-height: calc(78vh - var(--header-height));
+  position: relative;
+  min-height: calc(58vh - var(--header-height));
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 2.5rem;
-  padding-bottom: 2.5rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  overflow: hidden;
+}
+/* 텍스트 콘텐츠는 Lottie 배경 위로 올린다 */
+.hero > :not(.hero__lottie) {
+  position: relative;
+  z-index: 1;
+}
+.hero__lottie {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+  width: clamp(220px, 38vw, 460px);
+  max-width: 50%;
+  opacity: 0.9;
+}
+.hero__lottie dotlottie-wc {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+@media (max-width: 640px) {
+  .hero__lottie {
+    top: auto;
+    bottom: 0;
+    right: 50%;
+    transform: translateX(50%);
+    width: min(70vw, 280px);
+    max-width: none;
+    opacity: 0.35;
+  }
 }
 .hero__greeting {
   font-size: 1.1rem;
@@ -212,7 +247,10 @@ img { max-width: 100%; display: block; }
 
 /* ───── Section ───── */
 .section {
-  padding: var(--space-section) 0;
+  /* 세로 여백만 지정 — 단축 속성을 쓰면 .container 의 좌우 패딩이 0 으로 덮여
+     헤더/Hero 와 섹션 텍스트의 시작점이 어긋난다 */
+  padding-top: var(--space-section);
+  padding-bottom: var(--space-section);
 }
 .section--soft { background: var(--color-bg-soft); }
 
@@ -221,7 +259,7 @@ img { max-width: 100%; display: block; }
   justify-content: space-between;
   align-items: flex-end;
   gap: 1rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
 }
 .section__title-row .section__title { margin-bottom: 0; }
 
@@ -229,7 +267,7 @@ img { max-width: 100%; display: block; }
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
   position: relative;
   padding-bottom: 0.6rem;
 }
@@ -397,6 +435,9 @@ img { max-width: 100%; display: block; }
   display: grid;
   grid-template-columns: 160px 1fr;
   gap: 0.75rem;
+  /* 이름 input 을 textarea 높이에 맞춰 늘려 두 박스 높이를 동일하게 맞춘다
+     (input 은 단일 행이라 글자는 세로 중앙에 표시된다) */
+  align-items: stretch;
 }
 .guestbook__input,
 .guestbook__textarea {
@@ -411,6 +452,14 @@ img { max-width: 100%; display: block; }
   transition: border-color 0.15s ease;
 }
 .guestbook__textarea { min-height: 96px; resize: vertical; line-height: 1.6; }
+/* 이름 필드도 textarea 라 글자가 상단 정렬되어 메시지와 통일된다.
+   단 한 줄 입력이므로 리사이즈/줄바꿈 스크롤은 숨긴다 */
+.guestbook__input {
+  resize: none;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 1.6;
+}
 .guestbook__input:focus,
 .guestbook__textarea:focus {
   outline: none;
@@ -669,7 +718,7 @@ img { max-width: 100%; display: block; }
 
 /* ───── Mobile ───── */
 @media (max-width: 720px) {
-  :root { --space-section: 4rem; }
+  :root { --space-section: 2.5rem; }
 
   .nav__toggle { display: flex; }
 

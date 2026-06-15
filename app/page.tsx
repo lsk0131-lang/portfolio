@@ -2,11 +2,13 @@ import Career from "./components/Career";
 import Education from "./components/Education";
 import Guestbook from "./components/Guestbook";
 import SectionHeader from "./components/SectionHeader";
+import HeroLottie from "./components/HeroLottie";
 
 export default function Page() {
   return (
     <>
       <section id="hero" className="hero container reveal">
+        <HeroLottie />
         <p className="hero__greeting">안녕하세요, 저는</p>
         <h1 className="hero__name">
           <span>이슬기</span>

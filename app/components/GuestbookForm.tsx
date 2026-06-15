@@ -48,14 +48,18 @@ export default function GuestbookForm() {
   return (
     <form className="guestbook__form" onSubmit={onSubmit}>
       <div className="guestbook__row">
-        <input
+        <textarea
           className="guestbook__input"
-          type="text"
           name="name"
           placeholder="이름"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            // 이름은 한 줄로 유지 — Enter 줄바꿈 차단
+            if (e.key === "Enter") e.preventDefault();
+          }}
           maxLength={40}
+          rows={1}
           required
         />
         <textarea
